@@ -24,7 +24,7 @@ services:
     
     # Environment файл для Docker
     env_file:
-      - ../docker/.env.docker
+      - ../docker/.env
     
     # Переопределение переменных (имеют приоритет над env_file)
     environment:
