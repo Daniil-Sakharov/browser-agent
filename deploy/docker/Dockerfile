@@ -5,7 +5,7 @@
 # =====================================================
 
 # ========== STAGE 1: Builder ==========
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Установка необходимых зависимостей для сборки
 RUN apk add --no-cache \

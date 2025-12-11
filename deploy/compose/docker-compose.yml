@@ -22,7 +22,11 @@ services:
     # Restart policy
     restart: unless-stopped
     
-    # Environment variables
+    # Environment файл для Docker
+    env_file:
+      - ../docker/.env.docker
+    
+    # Переопределение переменных (имеют приоритет над env_file)
     environment:
       # API Key (обязательно передать при запуске!)
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
