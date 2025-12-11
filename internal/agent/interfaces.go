@@ -37,13 +37,6 @@ type SecurityChecker interface {
 	Close(ctx context.Context) error
 }
 
-// Config конфигурация агента
-type Config interface {
-	MaxSteps() int
-	Interactive() bool
-	Screenshots() bool
-}
-
 // ProgressCallback функция для вывода прогресса
 type ProgressCallback func(event ProgressEvent)
 

@@ -26,14 +26,14 @@ type Agent struct {
 }
 
 // New создает новый Agent
-func New(ctx context.Context, browser BrowserController, ai AIClient, security SecurityChecker, domSubAgent DOMSubAgent, cfg Config) (*Agent, error) {
+func New(ctx context.Context, browser BrowserController, ai AIClient, security SecurityChecker, domSubAgent DOMSubAgent, maxSteps int, interactive, screenshots bool) (*Agent, error) {
 	logger.Info(ctx, "✅ Agent initialized",
-		zap.Int("max_steps", cfg.MaxSteps()),
-		zap.Bool("interactive", cfg.Interactive()))
+		zap.Int("max_steps", maxSteps),
+		zap.Bool("interactive", interactive))
 
 	return &Agent{
 		browser: browser, ai: ai, security: security, domSubAgent: domSubAgent,
-		maxSteps: cfg.MaxSteps(), interactive: cfg.Interactive(), screenshots: cfg.Screenshots(),
+		maxSteps: maxSteps, interactive: interactive, screenshots: screenshots,
 	}, nil
 }
 

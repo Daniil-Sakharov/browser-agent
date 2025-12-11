@@ -19,21 +19,15 @@ type Checker struct {
 	confirmCallback ConfirmCallback
 }
 
-// Config интерфейс конфигурации
-type Config interface {
-	Enabled() bool
-	AutoConfirm() bool
-}
-
 // ConfirmCallback callback для подтверждения
 type ConfirmCallback func(ctx context.Context, action domain.Action, risk confirm.Risk) (bool, error)
 
 // New создаёт новый Checker
-func New(ctx context.Context, cfg Config, callback ConfirmCallback) (*Checker, error) {
-	logger.Info(ctx, "✅ Security Checker", zap.Bool("enabled", cfg.Enabled()))
+func New(ctx context.Context, enabled, autoConfirm bool, callback ConfirmCallback) (*Checker, error) {
+	logger.Info(ctx, "✅ Security Checker", zap.Bool("enabled", enabled))
 	return &Checker{
-		enabled:         cfg.Enabled(),
-		autoConfirm:     cfg.AutoConfirm(),
+		enabled:         enabled,
+		autoConfirm:     autoConfirm,
 		dangerousRules:  rules.BuildRules(),
 		confirmCallback: callback,
 	}, nil

@@ -33,7 +33,8 @@ func NewDIContainer() *DIContainer { return &DIContainer{} }
 // BrowserController возвращает контроллер браузера
 func (d *DIContainer) BrowserController(ctx context.Context) *browser.Controller {
 	if d.browserController == nil {
-		ctrl, err := browser.New(ctx, config.AppConfig().Browser)
+		cfg := config.AppConfig().Browser
+		ctrl, err := browser.New(ctx, cfg.Headless(), cfg.UserDataDir(), cfg.Timeout())
 		if err != nil {
 			panic(fmt.Sprintf("browser: %s", err))
 		}
@@ -46,7 +47,8 @@ func (d *DIContainer) BrowserController(ctx context.Context) *browser.Controller
 // AIClient возвращает AI клиент
 func (d *DIContainer) AIClient(ctx context.Context) *ai.Client {
 	if d.aiClient == nil {
-		client, err := ai.New(ctx, config.AppConfig().Anthropic)
+		cfg := config.AppConfig().Anthropic
+		client, err := ai.New(ctx, cfg.APIKey(), cfg.BaseURL(), cfg.Model(), cfg.MaxTokens(), cfg.Temperature())
 		if err != nil {
 			panic(fmt.Sprintf("ai: %s", err))
 		}
@@ -59,11 +61,12 @@ func (d *DIContainer) AIClient(ctx context.Context) *ai.Client {
 // SecurityChecker возвращает checker безопасности
 func (d *DIContainer) SecurityChecker(ctx context.Context) *security.Checker {
 	if d.securityChecker == nil {
+		cfg := config.AppConfig().Security
 		callback := func(ctx context.Context, a domain.Action, r confirm.Risk) (bool, error) {
 			fmt.Println()
 			return confirm.Action(a, r)
 		}
-		checker, err := security.New(ctx, config.AppConfig().Security, callback)
+		checker, err := security.New(ctx, cfg.Enabled(), cfg.AutoConfirm(), callback)
 		if err != nil {
 			panic(fmt.Sprintf("security: %s", err))
 		}
@@ -98,7 +101,8 @@ func (d *DIContainer) DOMSubAgent(ctx context.Context) *subagent.DOMSubAgent {
 // Agent возвращает основного агента
 func (d *DIContainer) Agent(ctx context.Context) *agent.Agent {
 	if d.agent == nil {
-		a, err := agent.New(ctx, d.BrowserController(ctx), d.AIClient(ctx), d.SecurityChecker(ctx), d.DOMSubAgent(ctx), config.AppConfig().Agent)
+		cfg := config.AppConfig().Agent
+		a, err := agent.New(ctx, d.BrowserController(ctx), d.AIClient(ctx), d.SecurityChecker(ctx), d.DOMSubAgent(ctx), cfg.MaxSteps(), cfg.Interactive(), cfg.Screenshots())
 		if err != nil {
 			panic(fmt.Sprintf("agent: %s", err))
 		}

@@ -21,42 +21,29 @@ type Client struct {
 	conversation *Conversation
 }
 
-// Config интерфейс конфигурации AI
-type Config interface {
-	APIKey() string
-	BaseURL() string
-	Model() string
-	MaxTokens() int
-	Temperature() float64
-}
-
 // New создает новый AI клиент
-func New(ctx context.Context, cfg Config) (*Client, error) {
-	if cfg.APIKey() == "" {
+func New(ctx context.Context, apiKey, baseURL, model string, maxTokens int, temperature float64) (*Client, error) {
+	if apiKey == "" {
 		return nil, fmt.Errorf("ANTHROPIC_API_KEY is required")
 	}
 
-	opts := []option.RequestOption{
-		option.WithAPIKey(cfg.APIKey()),
-	}
-
-	// Если указан кастомный URL - используем его (прокси/альтернативный API)
-	if cfg.BaseURL() != "" {
-		opts = append(opts, option.WithBaseURL(cfg.BaseURL()))
+	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
 	}
 
 	client := anthropic.NewClient(opts...)
 
 	logger.Info(ctx, "✅ AI Client initialized",
-		zap.String("model", cfg.Model()),
-		zap.String("base_url", cfg.BaseURL()),
-		zap.Int("max_tokens", cfg.MaxTokens()))
+		zap.String("model", model),
+		zap.String("base_url", baseURL),
+		zap.Int("max_tokens", maxTokens))
 
 	return &Client{
 		anthropic:   client,
-		model:       cfg.Model(),
-		maxTokens:   cfg.MaxTokens(),
-		temperature: cfg.Temperature(),
+		model:       model,
+		maxTokens:   maxTokens,
+		temperature: temperature,
 	}, nil
 }
 

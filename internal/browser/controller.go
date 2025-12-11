@@ -26,23 +26,16 @@ type Controller struct {
 	extractor *dom.Extractor
 }
 
-// Config интерфейс конфигурации браузера
-type Config interface {
-	Headless() bool
-	UserDataDir() string
-	Timeout() int
-}
-
 // New создаёт новый контроллер браузера
-func New(ctx context.Context, cfg Config) (*Controller, error) {
-	timeout := time.Duration(cfg.Timeout()) * time.Second
+func New(ctx context.Context, headless bool, userDataDir string, timeoutSec int) (*Controller, error) {
+	timeout := time.Duration(timeoutSec) * time.Second
 	if timeout == 0 {
 		timeout = 30 * time.Second
 	}
 
-	l := launcher.New().Headless(cfg.Headless()).Devtools(false)
-	if cfg.UserDataDir() != "" {
-		l = l.UserDataDir(cfg.UserDataDir())
+	l := launcher.New().Headless(headless).Devtools(false)
+	if userDataDir != "" {
+		l = l.UserDataDir(userDataDir)
 	}
 
 	u, err := l.Launch()
@@ -62,7 +55,7 @@ func New(ctx context.Context, cfg Config) (*Controller, error) {
 
 	page.Timeout(timeout).WaitLoad()
 
-	logger.Info(ctx, "✅ Browser initialized", zap.Bool("headless", cfg.Headless()), zap.Duration("timeout", timeout))
+	logger.Info(ctx, "✅ Browser initialized", zap.Bool("headless", headless), zap.Duration("timeout", timeout))
 	return &Controller{browser: browser, page: page, timeout: timeout, extractor: dom.NewExtractor()}, nil
 }
 
