@@ -1,4 +1,4 @@
-2025/12/11-14:34:45.340 14e03 Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/MANIFEST-000001
-2025/12/11-14:34:45.340 14e03 Recovering log #3
-2025/12/11-14:34:45.342 14e03 (ignoring error) /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/000003.log: dropping 2340 bytes; Corruption: checksum mismatch
-2025/12/11-14:34:45.342 14e03 Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/000003.log 
+2025/12/11-14:55:55.229 b803 Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/MANIFEST-000001
+2025/12/11-14:55:55.232 b803 Recovering log #3
+2025/12/11-14:55:55.232 b803 (ignoring error) /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/000003.log: dropping 2400 bytes; Corruption: checksum mismatch
+2025/12/11-14:55:55.232 b803 Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Site Characteristics Database/000003.log 

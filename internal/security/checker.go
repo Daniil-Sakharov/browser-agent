@@ -45,12 +45,12 @@ func (c *Checker) CheckAction(ctx context.Context, action domain.Action, pageCtx
 	switch {
 	case risk.Level <= rules.RiskLevelSafe:
 		return nil
-	case risk.Level == rules.RiskLevelCritical:
-		return fmt.Errorf("blocked: %s (critical)", risk.Reason)
-	case c.autoConfirm:
+	case c.autoConfirm && risk.Level < rules.RiskLevelCritical:
+		// Auto-confirm только для некритичных действий
 		logger.Warn(ctx, "⚠️ Auto-confirmed", zap.String("action", string(action.Type)))
 		return nil
 	case c.confirmCallback != nil:
+		// Для Critical и High - всегда спрашиваем пользователя
 		confirmed, err := c.confirmCallback(ctx, action, risk)
 		if err != nil {
 			return fmt.Errorf("confirm failed: %w", err)
@@ -58,6 +58,9 @@ func (c *Checker) CheckAction(ctx context.Context, action domain.Action, pageCtx
 		if !confirmed {
 			return fmt.Errorf("action rejected by user")
 		}
+	case risk.Level == rules.RiskLevelCritical:
+		// Если нет callback но уровень критический - блокируем
+		return fmt.Errorf("blocked: %s (critical, no confirmation available)", risk.Reason)
 	}
 	return nil
 }

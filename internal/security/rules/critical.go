@@ -31,19 +31,38 @@ func CriticalRules() []Rule {
 		{
 			Pattern: "financial_transaction",
 			Level:   RiskLevelCritical,
-			Reason:  "attempting financial transaction",
+			Reason:  "финансовая операция - требуется подтверждение",
 			Suggestions: []string{
-				"This may involve real money",
-				"Verify payment details carefully",
+				"Это может включать реальные деньги",
+				"Проверьте детали платежа внимательно",
 			},
 			Matcher: func(action domain.Action, ctx *domain.PageContext) bool {
-				if ctx == nil {
+				if action.Type != domain.ActionTypeClick {
 					return false
 				}
-				url := strings.ToLower(ctx.URL)
 				text := GetActionText(action)
-				return ContainsAny(url, []string{"payment", "checkout", "billing"}) &&
-					ContainsAny(text, []string{"pay", "purchase", "buy", "confirm payment", "place order"})
+				
+				// Ловим по тексту кнопки (независимо от URL)
+				paymentWords := []string{
+					"pay", "оплатить", "оплата", "купить", "purchase", "buy",
+					"confirm payment", "place order", "оформить заказ",
+					"заказать", "checkout", "подтвердить оплату",
+					"proceed to payment", "complete order", "завершить заказ",
+				}
+				if ContainsAny(text, paymentWords) {
+					return true
+				}
+				
+				// Ловим по URL если есть контекст
+				if ctx != nil {
+					url := strings.ToLower(ctx.URL)
+					if ContainsAny(url, []string{"payment", "checkout", "billing", "pay", "order"}) &&
+						ContainsAny(text, []string{"confirm", "submit", "next", "continue", "далее", "подтвердить"}) {
+						return true
+					}
+				}
+				
+				return false
 			},
 		},
 	}

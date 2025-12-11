@@ -58,7 +58,25 @@ func (m confirmModel) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("⚠️  ОПАСНОЕ ДЕЙСТВИЕ") + "\n")
+	
+	// Разные заголовки для разных уровней риска
+	title := "⚠️  ОПАСНОЕ ДЕЙСТВИЕ"
+	if m.risk.Level == rules.RiskLevelCritical {
+		title = "💳 ФИНАНСОВАЯ ОПЕРАЦИЯ - ПОДТВЕРДИТЕ ОПЛАТУ"
+	}
+	
+	criticalTitleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FF0000")).
+		Background(lipgloss.Color("#330000")).
+		Padding(0, 1).
+		MarginBottom(1)
+	
+	if m.risk.Level == rules.RiskLevelCritical {
+		b.WriteString(criticalTitleStyle.Render(title) + "\n")
+	} else {
+		b.WriteString(titleStyle.Render(title) + "\n")
+	}
 	b.WriteString(boxStyle.Render(m.details()) + "\n")
 
 	if len(m.risk.Suggestions) > 0 {
