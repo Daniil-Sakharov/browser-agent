@@ -33,6 +33,12 @@ func (c *Controller) ExecuteAction(ctx context.Context, a domain.Action) (*domai
 		return c.execScreenshot(ctx, a)
 	case domain.ActionTypeQueryDOM:
 		return fail(a, "query_dom handled by agent"), nil
+	case domain.ActionTypeListTabs:
+		return c.execListTabs(ctx, a)
+	case domain.ActionTypeSwitchTab:
+		return c.exec(ctx, a, func() error { return c.SwitchToTab(ctx, a.TabIndex) }, fmt.Sprintf("Switched to tab %d", a.TabIndex))
+	case domain.ActionTypeCloseTab:
+		return c.exec(ctx, a, func() error { return c.CloseCurrentTab(ctx) }, "Closed current tab")
 	default:
 		return nil, fmt.Errorf("unknown action: %s", a.Type)
 	}
@@ -60,6 +66,13 @@ func (c *Controller) execScreenshot(ctx context.Context, a domain.Action) (*doma
 	if err != nil { return fail(a, "Screenshot failed"), nil }
 	r := ok(a, "Screenshot: "+s.Path)
 	r.Screenshot, r.ScreenshotB64 = s.Path, s.Base64
+	return r, nil
+}
+
+func (c *Controller) execListTabs(ctx context.Context, a domain.Action) (*domain.ActionResult, error) {
+	result := c.ListTabs(ctx)
+	r := ok(a, result)
+	r.QueryResult = result
 	return r, nil
 }
 

@@ -8,6 +8,7 @@ func BrowserTools() []anthropic.ToolUnionParam {
 	params = append(params, NavigationTools()...)
 	params = append(params, InputTools()...)
 	params = append(params, QueryTools()...)
+	params = append(params, TabTools()...)
 
 	tools := make([]anthropic.ToolUnionParam, len(params))
 	for i, p := range params {

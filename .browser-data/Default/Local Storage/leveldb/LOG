@@ -1,3 +1,15 @@
-2025/12/11-13:46:41.597 5203 Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/MANIFEST-000001
-2025/12/11-13:46:41.617 5203 Recovering log #22
-2025/12/11-13:46:41.619 5203 Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/000022.log 
+2025/12/11-14:12:28.420 2d03 Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/MANIFEST-000001
+2025/12/11-14:12:28.435 2d03 Recovering log #22
+2025/12/11-14:12:28.438 2d03 Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/000022.log 
+2025/12/11-14:15:54.678 2d03 Level-0 table #26: started
+2025/12/11-14:15:54.699 2d03 Level-0 table #26: 16027 bytes OK
+2025/12/11-14:15:54.728 2d03 Delete type=0 #22
+2025/12/11-14:15:54.774 200f Compacting 4@0 + 1@1 files
+2025/12/11-14:15:54.804 200f Generated table #27@0: 174 keys, 641734 bytes
+2025/12/11-14:15:54.804 200f Compacted 4@0 + 1@1 files => 641734 bytes
+2025/12/11-14:15:54.827 200f compacted to: files[ 0 1 0 0 0 0 0 ]
+2025/12/11-14:15:54.830 200f Delete type=2 #14
+2025/12/11-14:15:54.830 200f Delete type=2 #17
+2025/12/11-14:15:54.830 200f Delete type=2 #20
+2025/12/11-14:15:54.830 200f Delete type=2 #23
+2025/12/11-14:15:54.830 200f Delete type=2 #26

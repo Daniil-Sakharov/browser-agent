@@ -61,6 +61,12 @@ func parseToolUse(t anthropic.ToolUseBlock) (*domain.Action, error) {
 		var in struct{ Query string }; json.Unmarshal(raw, &in); a.Type, a.Query = domain.ActionTypeQueryDOM, in.Query
 	case "analyze_page":
 		var in struct{ Question string }; json.Unmarshal(raw, &in); a.Type, a.Question = domain.ActionTypeAnalyzePage, in.Question
+	case "list_tabs":
+		a.Type = domain.ActionTypeListTabs
+	case "switch_tab":
+		var in struct{ TabIndex int `json:"tab_index"` }; json.Unmarshal(raw, &in); a.Type, a.TabIndex = domain.ActionTypeSwitchTab, in.TabIndex
+	case "close_tab":
+		a.Type = domain.ActionTypeCloseTab
 	default:
 		return nil, fmt.Errorf("unknown: %s", t.Name)
 	}

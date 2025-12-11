@@ -95,12 +95,14 @@ func (c *Controller) Click(ctx context.Context, selector string) error {
 		return err
 	}
 	
-	time.Sleep(200 * time.Millisecond) // Даём время на навигацию/новую вкладку
-	
-	// Проверяем новые вкладки
-	if c.GetTabCount() > tabsBefore {
-		c.SwitchToNewTab(ctx)
-		return nil
+	// Проверяем новые вкладки с retry (вкладка может открыться с задержкой)
+	for i := 0; i < 5; i++ {
+		time.Sleep(200 * time.Millisecond)
+		if c.GetTabCount() > tabsBefore {
+			c.SwitchToNewTab(ctx)
+			logger.Info(ctx, "🔀 Switched to new tab", zap.String("url", c.GetURL()))
+			return nil
+		}
 	}
 	
 	// Если URL изменился - ждём загрузки

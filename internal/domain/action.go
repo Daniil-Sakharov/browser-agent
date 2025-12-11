@@ -14,6 +14,7 @@ type Action struct {
 	FullPage  bool   // для take_screenshot
 	X         int    // для click_at_position
 	Y         int    // для click_at_position
+	TabIndex  int    // для switch_tab
 }
 
 // ActionType тип действия браузера
@@ -32,6 +33,9 @@ const (
 	ActionTypeTakeScreenshot  ActionType = "take_screenshot"
 	ActionTypeQueryDOM        ActionType = "query_dom"
 	ActionTypeAnalyzePage     ActionType = "analyze_page"
+	ActionTypeListTabs        ActionType = "list_tabs"
+	ActionTypeSwitchTab       ActionType = "switch_tab"
+	ActionTypeCloseTab        ActionType = "close_tab"
 )
 
 // ErrorContext контекст ошибки для адаптации агента
