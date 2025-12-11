@@ -8,8 +8,9 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // Click выполняет умный клик с цепочкой fallback
@@ -27,7 +28,7 @@ func Click(ctx context.Context, p PageProvider, selector string) error {
 func smartClickText(ctx context.Context, p PageProvider, page *rod.Page, text string) error {
 	// Убираем ... в конце если есть
 	text = strings.TrimSuffix(text, "...")
-	
+
 	attempts := []struct {
 		name string
 		fn   func() error
@@ -118,8 +119,8 @@ func findElementByText(page *rod.Page, text string, exact bool) (*rod.Element, e
 	if exact {
 		matchType = "exact"
 	}
-	
-	js := fmt.Sprintf(`(text, matchType) => {
+
+	js := `(text, matchType) => {
 		const t = text.toLowerCase();
 		const selectors = ['button','a','[role="button"]','[role="link"]','div[onclick]','span[onclick]','li','label','h1','h2','h3','h4'];
 		
@@ -145,9 +146,9 @@ func findElementByText(page *rod.Page, text string, exact bool) (*rod.Element, e
 			}
 		}
 		return null;
-	}`)
+	}`
 
-	result, err := page.Timeout(5 * time.Second).Eval(js, text, matchType)
+	result, err := page.Timeout(5*time.Second).Eval(js, text, matchType)
 	if err != nil || result.Value.Nil() {
 		return nil, fmt.Errorf("not found")
 	}
@@ -159,7 +160,7 @@ func findElementByText(page *rod.Page, text string, exact bool) (*rod.Element, e
 
 // jsSmartClick - умный JS клик с несколькими стратегиями
 func jsSmartClick(ctx context.Context, page *rod.Page, text string) error {
-	js := fmt.Sprintf(`(searchText) => {
+	js := `(searchText) => {
 		const t = searchText.toLowerCase();
 		const words = t.split(' ').filter(w => w.length > 2);
 		
@@ -191,13 +192,13 @@ func jsSmartClick(ctx context.Context, page *rod.Page, text string) error {
 			}
 		}
 		return {ok: false};
-	}`)
+	}`
 
 	result, err := page.Eval(js, text)
 	if err != nil || result == nil || !result.Value.Get("ok").Bool() {
 		return fmt.Errorf("js click failed")
 	}
-	
+
 	logger.Info(ctx, "🎯 JS smart click", zap.String("found", result.Value.Get("text").String()))
 	return nil
 }

@@ -2,6 +2,7 @@ package confirm
 
 import (
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security/rules"
 )
 

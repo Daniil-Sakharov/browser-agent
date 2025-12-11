@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // WaitForElement ждет появления элемента

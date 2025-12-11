@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // ScreenshotResult результат создания скриншота
@@ -43,12 +44,12 @@ func (c *Controller) TakeScreenshot(ctx context.Context, fullPage bool, saveDir 
 
 	// Создаем директорию если не существует
 	if saveDir != "" {
-		if err := os.MkdirAll(saveDir, 0755); err != nil {
+		if err := os.MkdirAll(saveDir, 0o755); err != nil {
 			logger.Warn(ctx, "⚠️ Failed to create screenshots dir", zap.Error(err))
 		}
 	} else {
 		saveDir = "screenshots"
-		os.MkdirAll(saveDir, 0755)
+		os.MkdirAll(saveDir, 0o755)
 	}
 
 	// Генерируем имя файла
@@ -56,7 +57,7 @@ func (c *Controller) TakeScreenshot(ctx context.Context, fullPage bool, saveDir 
 	filePath := filepath.Join(saveDir, filename)
 
 	// Сохраняем файл
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0o644); err != nil {
 		logger.Warn(ctx, "⚠️ Failed to save screenshot", zap.Error(err))
 	}
 

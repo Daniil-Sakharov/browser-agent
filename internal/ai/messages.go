@@ -27,7 +27,6 @@ func (c *Client) DecideNextAction(ctx context.Context) (*domain.Decision, error)
 		Messages: c.conversation.GetMessages(),
 		Tools:    tools.BrowserTools(),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response from Claude: %w", err)
 	}

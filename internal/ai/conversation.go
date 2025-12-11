@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/anthropics/anthropic-sdk-go"
+	"go.uber.org/zap"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 type Conversation struct {
@@ -29,11 +30,11 @@ func (c *Conversation) AddAssistantMessage(msg *anthropic.Message) {
 	c.messages = append(c.messages, msg.ToParam())
 }
 
-func (c *Conversation) AddToolResult(toolID string, result string, isError bool) {
+func (c *Conversation) AddToolResult(toolID, result string, isError bool) {
 	c.messages = append(c.messages, anthropic.NewUserMessage(anthropic.NewToolResultBlock(toolID, result, isError)))
 }
 
-func (c *Conversation) AddToolResultWithImage(toolID string, result string, imgB64 string, isError bool) {
+func (c *Conversation) AddToolResultWithImage(toolID, result, imgB64 string, isError bool) {
 	if imgB64 == "" {
 		c.AddToolResult(toolID, result, isError)
 		return
@@ -50,13 +51,13 @@ func (c *Conversation) AddToolResultWithImage(toolID string, result string, imgB
 	}
 
 	c.messages = append(c.messages, anthropic.MessageParam{
-		Role: anthropic.MessageParamRoleUser,
+		Role:    anthropic.MessageParamRoleUser,
 		Content: []anthropic.ContentBlockParamUnion{{OfToolResult: &block}},
 	})
 }
 
 func (c *Conversation) GetMessages() []anthropic.MessageParam { return c.messages }
-func (c *Conversation) Clear() { c.messages = make([]anthropic.MessageParam, 0) }
+func (c *Conversation) Clear()                                { c.messages = make([]anthropic.MessageParam, 0) }
 
 func (c *Conversation) formatContext(pctx *domain.PageContext) string {
 	if pctx == nil {
@@ -81,19 +82,25 @@ func (c *Conversation) formatContext(pctx *domain.PageContext) string {
 
 	if pctx.VisibleText != "" {
 		text := pctx.VisibleText
-		if len(text) > 2000 { text = text[:2000] + "..." }
+		if len(text) > 2000 {
+			text = text[:2000] + "..."
+		}
 		out += fmt.Sprintf("Visible: %s\n", text)
 	}
 	return out
 }
 
 func truncateText(s string, max int) string {
-	if len(s) > max { return s[:max] + "..." }
+	if len(s) > max {
+		return s[:max] + "..."
+	}
 	return s
 }
 
-func ParseToolInput(input interface{}, target interface{}) error {
+func ParseToolInput(input, target interface{}) error {
 	data, err := json.Marshal(input)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return json.Unmarshal(data, target)
 }

@@ -58,12 +58,12 @@ func (c *Client) AddUserMessage(task string, pageContext *domain.PageContext) er
 }
 
 // AddToolResult добавляет результат выполнения tool
-func (c *Client) AddToolResult(toolUseID string, result string, isError bool) {
+func (c *Client) AddToolResult(toolUseID, result string, isError bool) {
 	c.conversation.AddToolResult(toolUseID, result, isError)
 }
 
 // AddToolResultWithImage добавляет результат tool с изображением
-func (c *Client) AddToolResultWithImage(toolUseID string, result string, imageB64 string, isError bool) {
+func (c *Client) AddToolResultWithImage(toolUseID, result, imageB64 string, isError bool) {
 	c.conversation.AddToolResultWithImage(toolUseID, result, imageB64, isError)
 }
 

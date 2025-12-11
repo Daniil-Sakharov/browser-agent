@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // DOMSubAgent - AI-эксперт по анализу DOM

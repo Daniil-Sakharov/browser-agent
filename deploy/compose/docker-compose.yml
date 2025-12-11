@@ -1,0 +1,171 @@
+# =====================================================
+# AI Browser Agent - Docker Compose Configuration
+# =====================================================
+# Production-ready конфигурация для запуска агента
+# =====================================================
+
+version: '3.8'
+
+services:
+  agent:
+    # Имя образа
+    image: ai-browser-agent:latest
+    
+    # Собираем образ из Dockerfile
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    
+    # Имя контейнера
+    container_name: ai-browser-agent
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Environment variables из .env файла
+    env_file:
+      - ../../.env
+    
+    # Переопределение переменных для Docker окружения
+    environment:
+      # Browser Configuration (обязательно headless для Docker)
+      - BROWSER_HEADLESS=true
+      - BROWSER_USER_DATA_DIR=/app/.browser-data
+      - BROWSER_TIMEOUT=30
+      
+      # Agent Configuration
+      - AGENT_MAX_STEPS=30
+      - AGENT_INTERACTIVE=false
+      - AGENT_SCREENSHOTS=true
+      - AGENT_SCREENSHOTS_DIR=/app/screenshots
+      
+      # Security
+      - SECURITY_ENABLED=true
+      - SECURITY_AUTO_CONFIRM=false
+      
+      # Logger
+      - LOG_LEVEL=info
+      - LOG_AS_JSON=true
+      - LOG_FILE=/app/logs/agent.log
+      
+      # Timezone
+      - TZ=UTC
+    
+    # Volumes для persistent данных
+    volumes:
+      # Browser sessions (чтобы не логиниться каждый раз)
+      - browser-data:/app/.browser-data
+      
+      # Logs
+      - logs:/app/logs
+      
+      # Screenshots
+      - screenshots:/app/screenshots
+      
+      # Опционально: монтируем .env из хоста (если хочешь редактировать без rebuild)
+      # - ../../.env:/app/.env:ro
+    
+    # Security options
+    security_opt:
+      - seccomp:unconfined  # Для Chrome
+    
+    # Capabilities
+    cap_add:
+      - SYS_ADMIN  # Для Chrome sandbox
+    
+    # Shared memory (Chrome требует больше shm)
+    shm_size: '2gb'
+    
+    # Resource limits (опционально)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    
+    # Healthcheck
+    # healthcheck:
+    #   test: ["CMD", "pgrep", "-x", "agent"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 5s
+    
+    # Логирование
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Stdin для интерактивного ввода задач
+    stdin_open: true
+    tty: true
+    
+    # Networks
+    networks:
+      - agent-network
+
+# =====================================================
+# Volumes
+# =====================================================
+volumes:
+  browser-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../.browser-data
+  
+  logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../logs
+  
+  screenshots:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../screenshots
+
+# =====================================================
+# Networks
+# =====================================================
+networks:
+  agent-network:
+    driver: bridge
+
+# =====================================================
+# ИСПОЛЬЗОВАНИЕ:
+# =====================================================
+# 
+# 1. Сборка образа:
+#    docker-compose -f deploy/compose/docker-compose.yml build
+#
+# 2. Запуск:
+#    docker-compose -f deploy/compose/docker-compose.yml up
+#
+# 3. Запуск в фоне:
+#    docker-compose -f deploy/compose/docker-compose.yml up -d
+#
+# 4. Подключение к интерактивной консоли:
+#    docker attach ai-browser-agent
+#
+# 5. Логи:
+#    docker-compose -f deploy/compose/docker-compose.yml logs -f
+#
+# 6. Остановка:
+#    docker-compose -f deploy/compose/docker-compose.yml down
+#
+# 7. Полная очистка (с удалением volumes):
+#    docker-compose -f deploy/compose/docker-compose.yml down -v
+#
+# =====================================================

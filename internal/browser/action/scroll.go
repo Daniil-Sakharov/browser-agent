@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // Scroll прокручивает страницу через JavaScript (не зависит от настроек ОС)
@@ -41,8 +42,8 @@ func Scroll(ctx context.Context, p PageProvider, direction string, amount int) e
 	}
 
 	time.Sleep(400 * time.Millisecond) // Ждём завершения smooth scroll
-	
-	logger.Info(ctx, "✅ Scroll completed", 
+
+	logger.Info(ctx, "✅ Scroll completed",
 		zap.String("direction", direction),
 		zap.Int("scrollY", result.Value.Get("scrollY").Int()),
 		zap.Int("maxScroll", result.Value.Get("maxScroll").Int()))

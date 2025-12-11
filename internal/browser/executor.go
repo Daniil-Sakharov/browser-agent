@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 func (c *Controller) ExecuteAction(ctx context.Context, a domain.Action) (*domain.ActionResult, error) {
@@ -21,7 +22,10 @@ func (c *Controller) ExecuteAction(ctx context.Context, a domain.Action) (*domai
 	case domain.ActionTypeType:
 		return c.execWithErr(ctx, a, func() error { return c.Type(ctx, a.Selector, a.Value) }, "Typed into "+a.Selector)
 	case domain.ActionTypeScroll:
-		dir := a.Direction; if dir == "" { dir = "down" }
+		dir := a.Direction
+		if dir == "" {
+			dir = "down"
+		}
 		return c.exec(ctx, a, func() error { return c.Scroll(ctx, dir, 500) }, "Scrolled "+dir)
 	case domain.ActionTypeWait:
 		return c.execWithErr(ctx, a, func() error { return c.WaitForElement(ctx, a.Selector, 10*time.Second) }, "Element appeared: "+a.Selector)
@@ -63,7 +67,9 @@ func (c *Controller) execWithErr(ctx context.Context, a domain.Action, fn func()
 
 func (c *Controller) execScreenshot(ctx context.Context, a domain.Action) (*domain.ActionResult, error) {
 	s, err := c.TakeScreenshot(ctx, a.FullPage, "screenshots")
-	if err != nil { return fail(a, "Screenshot failed"), nil }
+	if err != nil {
+		return fail(a, "Screenshot failed"), nil
+	}
 	r := ok(a, "Screenshot: "+s.Path)
 	r.Screenshot, r.ScreenshotB64 = s.Path, s.Base64
 	return r, nil

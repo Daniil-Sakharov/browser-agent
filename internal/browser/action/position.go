@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/go-rod/rod/lib/proto"
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // ClickAtPosition кликает по координатам (x, y)

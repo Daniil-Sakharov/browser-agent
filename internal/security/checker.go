@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security/confirm"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security/rules"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // Checker проверяет безопасность действий

@@ -19,16 +19,16 @@ type BrowserController interface {
 type AIClient interface {
 	NewConversation()
 	AddUserMessage(task string, pageContext *domain.PageContext) error
-	AddToolResult(toolUseID string, result string, isError bool)
-	AddToolResultWithImage(toolUseID string, result string, imageB64 string, isError bool)
+	AddToolResult(toolUseID, result string, isError bool)
+	AddToolResultWithImage(toolUseID, result, imageB64 string, isError bool)
 	DecideNextAction(ctx context.Context) (*domain.Decision, error)
 	Close(ctx context.Context) error
 }
 
 // DOMSubAgent интерфейс для DOM sub-agent
 type DOMSubAgent interface {
-	Analyze(ctx context.Context, html string, liveElements string, question string) (string, error)
-	AnalyzeError(ctx context.Context, html string, liveElements string, failedAction string, errorMsg string) (string, error)
+	Analyze(ctx context.Context, html, liveElements, question string) (string, error)
+	AnalyzeError(ctx context.Context, html, liveElements, failedAction, errorMsg string) (string, error)
 }
 
 // SecurityChecker интерфейс проверки безопасности

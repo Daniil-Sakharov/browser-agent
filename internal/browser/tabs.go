@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // SwitchToNewTab переключается на новую вкладку если она появилась
@@ -45,7 +46,7 @@ func (c *Controller) ListTabs(ctx context.Context) string {
 
 	var out strings.Builder
 	out.WriteString(fmt.Sprintf("📑 Открыто вкладок: %d\n\n", len(pages)))
-	
+
 	currentIdx := -1
 	for i, p := range pages {
 		if p == c.page {
@@ -62,7 +63,7 @@ func (c *Controller) ListTabs(ctx context.Context) string {
 		}
 		out.WriteString(fmt.Sprintf("%s%d. %s\n   URL: %s\n", marker, i+1, title, info.URL))
 	}
-	
+
 	out.WriteString(fmt.Sprintf("\n💡 Текущая вкладка: %d. Используй switch_tab для переключения", currentIdx))
 	logger.Info(ctx, "📑 Listed tabs", zap.Int("count", len(pages)), zap.Int("current", currentIdx))
 	return out.String()

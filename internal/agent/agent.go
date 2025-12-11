@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // Agent основной orchestrator

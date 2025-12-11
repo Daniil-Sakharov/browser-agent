@@ -65,10 +65,10 @@ func (e *Extractor) emptyContext(title string) *domain.PageContext {
 func (e *Extractor) extractElements(doc *goquery.Document) []domain.Element {
 	var elems []domain.Element
 	selectors := map[string]string{
-		"button, input[type=submit], [role=button]":                         "button",
-		"a[href]":                                                            "link",
+		"button, input[type=submit], [role=button]": "button",
+		"a[href]": "link",
 		"input[type=text], input[type=email], input[type=search], textarea": "input",
-		"select":                                                             "select",
+		"select": "select",
 	}
 
 	for sel, elemType := range selectors {
@@ -89,7 +89,7 @@ func (e *Extractor) createElement(s *goquery.Selection, elemType string) domain.
 		Tag: goquery.NodeName(s), Text: strings.TrimSpace(s.Text()),
 		Selector: generateSelector(s), Type: elemType, Visible: true,
 		Clickable: elemType == "button" || elemType == "link",
-		ID: id, Classes: strings.Split(s.AttrOr("class", ""), " "),
+		ID:        id, Classes: strings.Split(s.AttrOr("class", ""), " "),
 	}
 }
 

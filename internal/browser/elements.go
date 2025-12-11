@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"github.com/ysmood/gson"
 	"go.uber.org/zap"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 
 // FindElementsLive возвращает кликабельные элементы со страницы
@@ -36,7 +37,7 @@ func formatElements(elements []gson.JSON) string {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("%d. %s", i+1, sel))
-		
+
 		// Показываем короткий вариант если текст длинный
 		if short := obj["shortSelector"].String(); short != "" && short != sel {
 			out.WriteString(fmt.Sprintf(" (или: %s)", short))

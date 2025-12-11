@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-rod/rod/lib/input"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
 

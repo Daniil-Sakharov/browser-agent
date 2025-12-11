@@ -3,8 +3,9 @@ package config
 import (
 	"os"
 
-	"github.com/Daniil-Sakharov/BrowserAgent/internal/config/env"
 	"github.com/joho/godotenv"
+
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/config/env"
 )
 
 var appConfig *config

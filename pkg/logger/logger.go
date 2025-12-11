@@ -94,10 +94,6 @@ func InitWithFile(levelStr string, asJSON bool, logFile string, config *LoggerCo
 	return nil
 }
 
-func buildCores(asJSON bool, config *LoggerConfig) []zapcore.Core {
-	return buildCoresWithFile(asJSON, "", config)
-}
-
 func buildCoresWithFile(asJSON bool, logFile string, config *LoggerConfig) []zapcore.Core {
 	var cores []zapcore.Core
 
@@ -124,10 +120,10 @@ func createFileCore(asJSON bool, logFile string) zapcore.Core {
 	// Создаем директорию если не существует
 	dir := filepath.Dir(logFile)
 	if dir != "" && dir != "." {
-		_ = os.MkdirAll(dir, 0755)
+		_ = os.MkdirAll(dir, 0o755)
 	}
 
-	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "⚠️  Failed to open log file %s: %v\n", logFile, err)
 		return createStdoutCore(asJSON) // Fallback to stdout

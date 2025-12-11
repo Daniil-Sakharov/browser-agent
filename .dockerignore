@@ -1,0 +1,99 @@
+# =====================================================
+# Docker ignore file for AI Browser Agent
+# =====================================================
+# Исключаем файлы которые не нужны в Docker образе
+# =====================================================
+
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+agent
+
+# Test coverage
+*.out
+coverage.html
+*.test
+
+# Logs
+logs/
+*.log
+log.txt
+
+# Screenshots
+screenshots/
+*.png
+*.jpg
+*.jpeg
+
+# Browser data
+.browser-data/
+
+# Environment files (НЕ копируем .env в образ!)
+.env
+.env.local
+.env.*.local
+
+# Dependencies (будут скачаны внутри контейнера)
+vendor/
+
+# Documentation
+*.md
+!README.md
+docs/
+PLAN.md
+task.txt
+
+# Task runner
+.task/
+Taskfile.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS specific
+Thumbs.db
+Desktop.ini
+
+# golangci-lint
+.golangci.yml
+
+# Go workspace
+go.work
+go.work.sum
+
+# Node modules (если есть)
+node_modules/
+
+# Python (если есть)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Deploy configs (не нужны внутри образа)
+deploy/
+docker-compose*.yml
+Dockerfile
+.dockerignore

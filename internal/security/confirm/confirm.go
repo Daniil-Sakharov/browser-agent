@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security/rules"
 )
@@ -58,20 +59,20 @@ func (m confirmModel) View() string {
 	}
 
 	var b strings.Builder
-	
+
 	// Разные заголовки для разных уровней риска
 	title := "⚠️  ОПАСНОЕ ДЕЙСТВИЕ"
 	if m.risk.Level == rules.RiskLevelCritical {
 		title = "💳 ФИНАНСОВАЯ ОПЕРАЦИЯ - ПОДТВЕРДИТЕ ОПЛАТУ"
 	}
-	
+
 	criticalTitleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#FF0000")).
 		Background(lipgloss.Color("#330000")).
 		Padding(0, 1).
 		MarginBottom(1)
-	
+
 	if m.risk.Level == rules.RiskLevelCritical {
 		b.WriteString(criticalTitleStyle.Render(title) + "\n")
 	} else {

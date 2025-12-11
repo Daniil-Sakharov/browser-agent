@@ -41,7 +41,7 @@ func CriticalRules() []Rule {
 					return false
 				}
 				text := GetActionText(action)
-				
+
 				// Ловим по тексту кнопки (независимо от URL)
 				paymentWords := []string{
 					"pay", "оплатить", "оплата", "купить", "purchase", "buy",
@@ -52,7 +52,7 @@ func CriticalRules() []Rule {
 				if ContainsAny(text, paymentWords) {
 					return true
 				}
-				
+
 				// Ловим по URL если есть контекст
 				if ctx != nil {
 					url := strings.ToLower(ctx.URL)
@@ -61,7 +61,7 @@ func CriticalRules() []Rule {
 						return true
 					}
 				}
-				
+
 				return false
 			},
 		},

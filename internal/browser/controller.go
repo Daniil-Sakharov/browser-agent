@@ -8,12 +8,12 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
+	"go.uber.org/zap"
 
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/browser/action"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/browser/dom"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // Controller управляет браузером
@@ -90,11 +90,11 @@ func (c *Controller) Navigate(ctx context.Context, url string) error {
 func (c *Controller) Click(ctx context.Context, selector string) error {
 	urlBefore := c.GetURL()
 	tabsBefore := c.GetTabCount()
-	
+
 	if err := action.Click(ctx, c, selector); err != nil {
 		return err
 	}
-	
+
 	// Проверяем новые вкладки с retry (вкладка может открыться с задержкой)
 	for i := 0; i < 5; i++ {
 		time.Sleep(200 * time.Millisecond)
@@ -104,7 +104,7 @@ func (c *Controller) Click(ctx context.Context, selector string) error {
 			return nil
 		}
 	}
-	
+
 	// Если URL изменился - ждём загрузки
 	urlAfter := c.GetURL()
 	if urlAfter != urlBefore && urlAfter != "" {
@@ -112,7 +112,7 @@ func (c *Controller) Click(ctx context.Context, selector string) error {
 		c.page.Timeout(c.timeout).WaitLoad()
 		c.page.Timeout(2 * time.Second).WaitStable(300 * time.Millisecond)
 	}
-	
+
 	return nil
 }
 
