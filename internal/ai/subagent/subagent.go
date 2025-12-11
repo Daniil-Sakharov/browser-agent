@@ -5,27 +5,28 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm"
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm/claude"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
 )
 
 // DOMSubAgent - AI-эксперт по анализу DOM
 type DOMSubAgent struct {
-	client    *anthropic.Client
+	provider  llm.Provider
 	model     string
 	maxTokens int
 }
 
 // New создаёт нового Sub-Agent
 func New(apiKey, baseURL, model string, maxTokens int) *DOMSubAgent {
-	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
-	if baseURL != "" {
-		opts = append(opts, option.WithBaseURL(baseURL))
-	}
-	client := anthropic.NewClient(opts...)
-	return &DOMSubAgent{client: &client, model: model, maxTokens: maxTokens}
+	provider, _ := claude.New(claude.Config{APIKey: apiKey, BaseURL: baseURL})
+	return &DOMSubAgent{provider: provider, model: model, maxTokens: maxTokens}
+}
+
+// NewWithProvider создаёт Sub-Agent с кастомным LLM провайдером
+func NewWithProvider(provider llm.Provider, model string, maxTokens int) *DOMSubAgent {
+	return &DOMSubAgent{provider: provider, model: model, maxTokens: maxTokens}
 }
 
 // Analyze анализирует страницу и отвечает на вопрос
@@ -66,41 +67,40 @@ func (d *DOMSubAgent) Query(ctx context.Context, html, query string) (string, er
 // QueryWithScreenshot анализирует скриншот
 func (d *DOMSubAgent) QueryWithScreenshot(ctx context.Context, screenshotB64, query string) (string, error) {
 	logger.Info(ctx, "🔍 Sub-Agent: Visual query", zap.String("query", query))
-	msg, err := d.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model: anthropic.Model(d.model), MaxTokens: int64(d.maxTokens),
-		System: []anthropic.TextBlockParam{{Text: VisualAnalysisPrompt}},
-		Messages: []anthropic.MessageParam{{
-			Role: anthropic.MessageParamRoleUser,
-			Content: []anthropic.ContentBlockParamUnion{
-				anthropic.NewImageBlockBase64("image/png", screenshotB64),
-				anthropic.NewTextBlock(query),
-			},
-		}},
+
+	resp, err := d.provider.ChatWithVision(ctx, &llm.VisionRequest{
+		Model:       d.model,
+		MaxTokens:   d.maxTokens,
+		System:      VisualAnalysisPrompt,
+		ImageBase64: screenshotB64,
+		ImageType:   "image/png",
+		Query:       query,
 	})
 	if err != nil {
 		return "", err
 	}
-	return extractText(msg), nil
+	return extractText(resp), nil
 }
 
 func (d *DOMSubAgent) send(ctx context.Context, system, user string) (string, error) {
-	msg, err := d.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model: anthropic.Model(d.model), MaxTokens: int64(d.maxTokens),
-		System: []anthropic.TextBlockParam{{Text: system}},
-		Messages: []anthropic.MessageParam{{
-			Role: anthropic.MessageParamRoleUser,
-			Content: []anthropic.ContentBlockParamUnion{anthropic.NewTextBlock(user)},
+	resp, err := d.provider.Chat(ctx, &llm.ChatRequest{
+		Model:     d.model,
+		MaxTokens: d.maxTokens,
+		System:    system,
+		Messages: []llm.Message{{
+			Role:    "user",
+			Content: []llm.ContentBlock{{Type: "text", Text: user}},
 		}},
 	})
 	if err != nil {
 		return "", err
 	}
-	return extractText(msg), nil
+	return extractText(resp), nil
 }
 
-func extractText(m *anthropic.Message) string {
-	for _, b := range m.Content {
-		if b.Type == "text" {
+func extractText(resp *llm.ChatResponse) string {
+	for _, b := range resp.Content {
+		if b.IsText() {
 			return b.Text
 		}
 	}

@@ -54,7 +54,10 @@ func (a *Agent) Execute(ctx context.Context, task *domain.Task) error {
 	a.currentTask = task
 	a.stepCount = 0
 	a.ai.NewConversation()
-	task.Status = domain.TaskStatusRunning
+
+	if err := task.Start(); err != nil {
+		return fmt.Errorf("start task: %w", err)
+	}
 
 	for {
 		a.stepCount++
@@ -62,13 +65,12 @@ func (a *Agent) Execute(ctx context.Context, task *domain.Task) error {
 
 		complete, err := a.executeStep(ctx)
 		if err != nil {
-			task.Status = domain.TaskStatusFailed
-			task.Error = err
+			_ = task.Fail(err)
 			return fmt.Errorf("step %d: %w", a.stepCount, err)
 		}
 
 		if complete {
-			task.Status = domain.TaskStatusCompleted
+			_ = task.Complete(task.Result)
 			logger.Info(ctx, "✅ Task completed", zap.Int("steps", a.stepCount))
 			return nil
 		}
