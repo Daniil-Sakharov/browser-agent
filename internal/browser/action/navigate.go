@@ -21,13 +21,15 @@ func Navigate(ctx context.Context, p PageProvider, url string) error {
 		return fmt.Errorf("navigation failed: %w", err)
 	}
 
+	// WaitLoad - не критичная ошибка если таймаут
 	if err := page.Timeout(timeout).WaitLoad(); err != nil {
-		logger.Error(ctx, "❌ WaitLoad failed", zap.Error(err))
-		return fmt.Errorf("page load timeout: %w", err)
+		logger.Warn(ctx, "⚠️ WaitLoad timeout, continuing...", zap.Error(err))
+		// Не возвращаем ошибку - страница может работать
 	}
 
-	if err := page.Timeout(5 * time.Second).WaitStable(500 * time.Millisecond); err != nil {
-		logger.Warn(ctx, "⚠️ WaitStable timeout", zap.Error(err))
+	// WaitStable опционально
+	if err := page.Timeout(3 * time.Second).WaitStable(300 * time.Millisecond); err != nil {
+		logger.Debug(ctx, "WaitStable timeout", zap.Error(err))
 	}
 
 	logger.Info(ctx, "✅ Navigation completed", zap.String("url", url))

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
+	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func (c *Controller) ExecuteAction(ctx context.Context, a domain.Action) (*domain.ActionResult, error) {
@@ -37,7 +39,10 @@ func (c *Controller) ExecuteAction(ctx context.Context, a domain.Action) (*domai
 }
 
 func (c *Controller) exec(ctx context.Context, a domain.Action, fn func() error, msg string) (*domain.ActionResult, error) {
-	if err := fn(); err != nil { return fail(a, msg+" failed"), nil }
+	if err := fn(); err != nil {
+		logger.Error(ctx, "❌ Action error", zap.String("action", string(a.Type)), zap.Error(err))
+		return fail(a, msg+" failed: "+err.Error()), nil
+	}
 	return ok(a, msg), nil
 }
 
