@@ -1,32 +1,25 @@
 package env
 
-import (
-	"os"
-	"strconv"
-)
+import "github.com/caarlos0/env/v11"
 
-type BrowserConfig struct {
-	headless    bool
-	userDataDir string
-	timeout     int
+type browserEnvConfig struct {
+	Headless    bool   `env:"BROWSER_HEADLESS" envDefault:"false"`
+	UserDataDir string `env:"BROWSER_USER_DATA_DIR" envDefault:".browser-data"`
+	Timeout     int    `env:"BROWSER_TIMEOUT" envDefault:"30"`
 }
 
-func (b *BrowserConfig) Headless() bool    { return b.headless }
-func (b *BrowserConfig) UserDataDir() string { return b.userDataDir }
-func (b *BrowserConfig) Timeout() int      { return b.timeout }
-
-func LoadBrowserConfig() *BrowserConfig {
-	userDataDir := os.Getenv("BROWSER_USER_DATA_DIR")
-	if userDataDir == "" {
-		userDataDir = ".browser-data"
-	}
-	timeout, _ := strconv.Atoi(os.Getenv("BROWSER_TIMEOUT"))
-	if timeout == 0 {
-		timeout = 30
-	}
-	return &BrowserConfig{
-		headless:    os.Getenv("BROWSER_HEADLESS") == "true",
-		userDataDir: userDataDir,
-		timeout:     timeout,
-	}
+type browserConfig struct {
+	raw browserEnvConfig
 }
+
+func NewBrowserConfig() (*browserConfig, error) {
+	var raw browserEnvConfig
+	if err := env.Parse(&raw); err != nil {
+		return nil, err
+	}
+	return &browserConfig{raw: raw}, nil
+}
+
+func (c *browserConfig) Headless() bool      { return c.raw.Headless }
+func (c *browserConfig) UserDataDir() string { return c.raw.UserDataDir }
+func (c *browserConfig) Timeout() int        { return c.raw.Timeout }

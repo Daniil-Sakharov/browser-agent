@@ -1,35 +1,27 @@
 package env
 
-import (
-	"os"
-	"strconv"
-)
+import "github.com/caarlos0/env/v11"
 
-type AgentConfig struct {
-	maxSteps       int
-	interactive    bool
-	screenshots    bool
-	screenshotsDir string
+type agentEnvConfig struct {
+	MaxSteps       int    `env:"AGENT_MAX_STEPS" envDefault:"30"`
+	Interactive    bool   `env:"AGENT_INTERACTIVE" envDefault:"true"`
+	Screenshots    bool   `env:"AGENT_SCREENSHOTS" envDefault:"true"`
+	ScreenshotsDir string `env:"AGENT_SCREENSHOTS_DIR" envDefault:"screenshots"`
 }
 
-func (a *AgentConfig) MaxSteps() int          { return a.maxSteps }
-func (a *AgentConfig) Interactive() bool      { return a.interactive }
-func (a *AgentConfig) Screenshots() bool      { return a.screenshots }
-func (a *AgentConfig) ScreenshotsDir() string { return a.screenshotsDir }
-
-func LoadAgentConfig() *AgentConfig {
-	maxSteps, _ := strconv.Atoi(os.Getenv("AGENT_MAX_STEPS"))
-	if maxSteps == 0 {
-		maxSteps = 30
-	}
-	screenshotsDir := os.Getenv("AGENT_SCREENSHOTS_DIR")
-	if screenshotsDir == "" {
-		screenshotsDir = "screenshots"
-	}
-	return &AgentConfig{
-		maxSteps:       maxSteps,
-		interactive:    os.Getenv("AGENT_INTERACTIVE") != "false",
-		screenshots:    os.Getenv("AGENT_SCREENSHOTS") != "false",
-		screenshotsDir: screenshotsDir,
-	}
+type agentConfig struct {
+	raw agentEnvConfig
 }
+
+func NewAgentConfig() (*agentConfig, error) {
+	var raw agentEnvConfig
+	if err := env.Parse(&raw); err != nil {
+		return nil, err
+	}
+	return &agentConfig{raw: raw}, nil
+}
+
+func (c *agentConfig) MaxSteps() int          { return c.raw.MaxSteps }
+func (c *agentConfig) Interactive() bool      { return c.raw.Interactive }
+func (c *agentConfig) Screenshots() bool      { return c.raw.Screenshots }
+func (c *agentConfig) ScreenshotsDir() string { return c.raw.ScreenshotsDir }

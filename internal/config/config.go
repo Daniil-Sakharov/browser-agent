@@ -7,10 +7,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var appConfig *Config
+var appConfig *config
 
-// Config глобальная конфигурация приложения
-type Config struct {
+type config struct {
 	Logger    LoggerConfig
 	Browser   BrowserConfig
 	Anthropic AnthropicConfig
@@ -18,28 +17,47 @@ type Config struct {
 	Security  SecurityConfig
 }
 
-// Load загружает конфигурацию из .env файла и переменных окружения
 func Load(path ...string) error {
 	if err := godotenv.Load(path...); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
-	anthropicCfg, err := env.LoadAnthropicConfig()
+	loggerCfg, err := env.NewLoggerConfig()
 	if err != nil {
 		return err
 	}
 
-	appConfig = &Config{
-		Logger:    env.LoadLoggerConfig(),
-		Browser:   env.LoadBrowserConfig(),
-		Anthropic: anthropicCfg,
-		Agent:     env.LoadAgentConfig(),
-		Security:  env.LoadSecurityConfig(),
+	browserCfg, err := env.NewBrowserConfig()
+	if err != nil {
+		return err
 	}
+
+	anthropicCfg, err := env.NewAnthropicConfig()
+	if err != nil {
+		return err
+	}
+
+	agentCfg, err := env.NewAgentConfig()
+	if err != nil {
+		return err
+	}
+
+	securityCfg, err := env.NewSecurityConfig()
+	if err != nil {
+		return err
+	}
+
+	appConfig = &config{
+		Logger:    loggerCfg,
+		Browser:   browserCfg,
+		Anthropic: anthropicCfg,
+		Agent:     agentCfg,
+		Security:  securityCfg,
+	}
+
 	return nil
 }
 
-// AppConfig возвращает глобальную конфигурацию
-func AppConfig() *Config {
+func AppConfig() *config {
 	return appConfig
 }

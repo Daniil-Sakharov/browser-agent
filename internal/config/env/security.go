@@ -1,18 +1,23 @@
 package env
 
-import "os"
+import "github.com/caarlos0/env/v11"
 
-type SecurityConfig struct {
-	enabled     bool
-	autoConfirm bool
+type securityEnvConfig struct {
+	Enabled     bool `env:"SECURITY_ENABLED" envDefault:"true"`
+	AutoConfirm bool `env:"SECURITY_AUTO_CONFIRM" envDefault:"false"`
 }
 
-func (s *SecurityConfig) Enabled() bool     { return s.enabled }
-func (s *SecurityConfig) AutoConfirm() bool { return s.autoConfirm }
+type securityConfig struct {
+	raw securityEnvConfig
+}
 
-func LoadSecurityConfig() *SecurityConfig {
-	return &SecurityConfig{
-		enabled:     os.Getenv("SECURITY_ENABLED") != "false",
-		autoConfirm: os.Getenv("SECURITY_AUTO_CONFIRM") == "true",
+func NewSecurityConfig() (*securityConfig, error) {
+	var raw securityEnvConfig
+	if err := env.Parse(&raw); err != nil {
+		return nil, err
 	}
+	return &securityConfig{raw: raw}, nil
 }
+
+func (c *securityConfig) Enabled() bool     { return c.raw.Enabled }
+func (c *securityConfig) AutoConfirm() bool { return c.raw.AutoConfirm }
