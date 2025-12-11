@@ -33,6 +33,7 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+deploy/docker/.env
 
 # Agent storage
 .agent-storage/
