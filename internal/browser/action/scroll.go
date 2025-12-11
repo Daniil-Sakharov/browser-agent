@@ -9,24 +9,42 @@ import (
 	"go.uber.org/zap"
 )
 
-// Scroll прокручивает страницу
+// Scroll прокручивает страницу через JavaScript (не зависит от настроек ОС)
 func Scroll(ctx context.Context, p PageProvider, direction string, amount int) error {
 	logger.Info(ctx, "📜 Scrolling", zap.String("direction", direction), zap.Int("amount", amount))
 
 	if amount == 0 {
 		amount = 500
 	}
-	if direction == "down" {
-		amount = -amount
+
+	// JavaScript scroll - работает одинаково на всех ОС
+	scrollY := amount
+	if direction == "up" {
+		scrollY = -amount
 	}
 
 	page := p.GetPage()
-	if err := page.Mouse.Scroll(0, float64(amount), 10); err != nil {
+	js := fmt.Sprintf(`() => {
+		window.scrollBy({
+			top: %d,
+			behavior: 'smooth'
+		});
+		return {
+			scrollY: window.scrollY,
+			maxScroll: document.documentElement.scrollHeight - window.innerHeight
+		};
+	}`, scrollY)
+
+	result, err := page.Eval(js)
+	if err != nil {
 		return fmt.Errorf("scroll failed: %w", err)
 	}
 
-	// Короткая пауза вместо WaitStable (не блокирует на динамических страницах)
-	time.Sleep(300 * time.Millisecond)
-	logger.Info(ctx, "✅ Scroll completed")
+	time.Sleep(400 * time.Millisecond) // Ждём завершения smooth scroll
+	
+	logger.Info(ctx, "✅ Scroll completed", 
+		zap.String("direction", direction),
+		zap.Int("scrollY", result.Value.Get("scrollY").Int()),
+		zap.Int("maxScroll", result.Value.Get("maxScroll").Int()))
 	return nil
 }

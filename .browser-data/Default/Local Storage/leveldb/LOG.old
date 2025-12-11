@@ -1,3 +1,6 @@
-2025/12/11-13:01:44.372 1b0b Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/MANIFEST-000001
-2025/12/11-13:01:44.385 1b0b Recovering log #19
-2025/12/11-13:01:44.388 1b0b Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/000019.log 
+2025/12/11-13:37:34.050 5203 Reusing MANIFEST /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/MANIFEST-000001
+2025/12/11-13:37:34.070 5203 Recovering log #19
+2025/12/11-13:37:34.078 5203 Reusing old log /Users/sug6r/Desktop/AIAgent/.browser-data/Default/Local Storage/leveldb/000019.log 
+2025/12/11-13:37:58.578 2c0b Level-0 table #23: started
+2025/12/11-13:37:58.618 2c0b Level-0 table #23: 16613 bytes OK
+2025/12/11-13:37:58.696 2c0b Delete type=0 #19

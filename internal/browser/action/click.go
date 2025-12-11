@@ -12,101 +12,217 @@ import (
 	"go.uber.org/zap"
 )
 
-// Click выполняет клик по селектору (text: или CSS)
+// Click выполняет умный клик с цепочкой fallback
 func Click(ctx context.Context, p PageProvider, selector string) error {
 	page := p.GetPage()
-	timeout := 10 * time.Second
 
 	if strings.HasPrefix(selector, "text:") {
-		return clickByText(ctx, p, page, strings.TrimPrefix(selector, "text:"), timeout)
+		text := strings.TrimPrefix(selector, "text:")
+		return smartClickText(ctx, p, page, text)
 	}
-	return clickByCSS(ctx, p, page, selector, timeout)
+	return smartClickCSS(ctx, p, page, selector)
 }
 
-func clickByText(ctx context.Context, p PageProvider, page *rod.Page, text string, timeout time.Duration) error {
-	if elem, err := findByText(page, text, timeout); err == nil {
-		if err := doClick(ctx, p, elem); err == nil {
-			logger.Info(ctx, "✅ Click via Rod", zap.String("text", text))
+// smartClickText - умный клик по тексту с fallback цепочкой
+func smartClickText(ctx context.Context, p PageProvider, page *rod.Page, text string) error {
+	// Убираем ... в конце если есть
+	text = strings.TrimSuffix(text, "...")
+	
+	attempts := []struct {
+		name string
+		fn   func() error
+	}{
+		{"exact", func() error { return tryClickText(ctx, p, page, text, true) }},
+		{"partial", func() error { return tryClickText(ctx, p, page, text, false) }},
+		{"short", func() error { return tryClickText(ctx, p, page, getShortText(text), false) }},
+		{"js_smart", func() error { return jsSmartClick(ctx, page, text) }},
+	}
+
+	for _, a := range attempts {
+		logger.Debug(ctx, "🔄 Trying click", zap.String("method", a.name), zap.String("text", text))
+		if err := a.fn(); err == nil {
+			logger.Info(ctx, "✅ Click success", zap.String("method", a.name), zap.String("text", text))
 			return nil
 		}
 	}
-	if err := jsClickText(ctx, page, text); err == nil {
-		logger.Info(ctx, "✅ Click via JS", zap.String("text", text))
-		return nil
-	}
+
 	return fmt.Errorf("element not found: text:%s", text)
 }
 
-func clickByCSS(ctx context.Context, p PageProvider, page *rod.Page, selector string, timeout time.Duration) error {
-	if elem, err := page.Timeout(timeout).Element(selector); err == nil {
-		if err := doClick(ctx, p, elem); err == nil {
-			logger.Info(ctx, "✅ Click via Rod", zap.String("selector", selector))
+// smartClickCSS - умный клик по CSS с fallback
+func smartClickCSS(ctx context.Context, p PageProvider, page *rod.Page, selector string) error {
+	attempts := []struct {
+		name string
+		fn   func() error
+	}{
+		{"rod", func() error { return tryClickCSS(ctx, p, page, selector) }},
+		{"js", func() error { return jsClickCSS(page, selector) }},
+	}
+
+	for _, a := range attempts {
+		if err := a.fn(); err == nil {
+			logger.Info(ctx, "✅ Click CSS", zap.String("method", a.name), zap.String("selector", selector))
 			return nil
 		}
-	}
-	if err := jsClick(page, selector); err == nil {
-		logger.Info(ctx, "✅ Click via JS", zap.String("selector", selector))
-		return nil
 	}
 	return fmt.Errorf("element not found: %s", selector)
 }
 
+// tryClickText пробует кликнуть по тексту через Rod
+func tryClickText(ctx context.Context, p PageProvider, page *rod.Page, text string, exact bool) error {
+	elem, err := findElementByText(page, text, exact)
+	if err != nil {
+		return err
+	}
+	return doClick(ctx, p, elem)
+}
+
+// tryClickCSS пробует кликнуть по CSS через Rod
+func tryClickCSS(ctx context.Context, p PageProvider, page *rod.Page, selector string) error {
+	elem, err := page.Timeout(5 * time.Second).Element(selector)
+	if err != nil {
+		return err
+	}
+	return doClick(ctx, p, elem)
+}
+
+// doClick выполняет клик с hover и scroll
 func doClick(ctx context.Context, p PageProvider, elem *rod.Element) error {
-	elem.ScrollIntoView()
-	if elem.Timeout(5*time.Second).WaitVisible() != nil {
+	// Scroll к элементу
+	if err := elem.ScrollIntoView(); err != nil {
+		return err
+	}
+	time.Sleep(100 * time.Millisecond)
+
+	// Hover перед кликом (важно для dropdown/меню)
+	elem.Hover()
+	time.Sleep(50 * time.Millisecond)
+
+	// Проверяем видимость
+	if err := elem.Timeout(3 * time.Second).WaitVisible(); err != nil {
 		return fmt.Errorf("not visible")
 	}
-	if elem.Click(proto.InputMouseButtonLeft, 1) != nil {
-		return fmt.Errorf("click failed")
+
+	// Клик
+	if err := elem.Click(proto.InputMouseButtonLeft, 1); err != nil {
+		return err
 	}
-	p.WaitStable(5 * time.Second)
+
+	p.WaitStable(3 * time.Second)
 	return nil
 }
 
-func jsClick(page *rod.Page, sel string) error {
-	js := fmt.Sprintf(`()=>{const e=document.querySelector('%s');if(!e)return{ok:0};e.scrollIntoView();e.click();return{ok:1}}`,
-		strings.ReplaceAll(sel, "'", "\\'"))
-	r, _ := page.Eval(js)
-	if r == nil || !r.Value.Get("ok").Bool() {
-		return fmt.Errorf("click failed")
+// findElementByText ищет элемент по тексту
+func findElementByText(page *rod.Page, text string, exact bool) (*rod.Element, error) {
+	matchType := "includes"
+	if exact {
+		matchType = "exact"
 	}
-	return nil
-}
-
-func jsClickText(ctx context.Context, page *rod.Page, text string) error {
-	js := fmt.Sprintf(`()=>{
-		const t='%s'.toLowerCase();
-		const tags=['button','a','div','span','li','p','label','input','td','th','h1','h2','h3','h4','h5','h6'];
-		for(const s of tags){
-			for(const e of document.querySelectorAll(s)){
-				const x=(e.innerText||e.textContent||'').trim().toLowerCase();
-				if(x===t||x.includes(t)||(x.length<100&&t.includes(x)&&x.length>3)){
-					e.scrollIntoView({block:'center'});
-					e.click();
-					return {ok:true,tag:s,text:x.substring(0,50)};
+	
+	js := fmt.Sprintf(`(text, matchType) => {
+		const t = text.toLowerCase();
+		const selectors = ['button','a','[role="button"]','[role="link"]','div[onclick]','span[onclick]','li','label','h1','h2','h3','h4'];
+		
+		for (const sel of selectors) {
+			for (const el of document.querySelectorAll(sel)) {
+				const rect = el.getBoundingClientRect();
+				if (rect.width === 0 || rect.height === 0) continue;
+				
+				const elText = (el.innerText || el.textContent || '').trim().toLowerCase();
+				const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+				const title = (el.getAttribute('title') || '').toLowerCase();
+				
+				let match = false;
+				if (matchType === 'exact') {
+					match = elText === t || ariaLabel === t;
+				} else {
+					match = elText.includes(t) || t.includes(elText.substring(0, 20)) || ariaLabel.includes(t) || title.includes(t);
+				}
+				
+				if (match && elText.length > 0 && elText.length < 200) {
+					return el;
 				}
 			}
 		}
-		return {ok:false};
-	}`, strings.ReplaceAll(text, "'", "\\'"))
-	r, err := page.Eval(js)
-	if err != nil || r == nil || !r.Value.Get("ok").Bool() {
-		return fmt.Errorf("text not found")
+		return null;
+	}`)
+
+	result, err := page.Timeout(5 * time.Second).Eval(js, text, matchType)
+	if err != nil || result.Value.Nil() {
+		return nil, fmt.Errorf("not found")
 	}
-	logger.Info(ctx, "🎯 JS found", zap.String("tag", r.Value.Get("tag").String()))
+
+	return page.ElementFromObject(&proto.RuntimeRemoteObject{
+		ObjectID: proto.RuntimeRemoteObjectID(result.Value.Get("objectId").String()),
+	})
+}
+
+// jsSmartClick - умный JS клик с несколькими стратегиями
+func jsSmartClick(ctx context.Context, page *rod.Page, text string) error {
+	js := fmt.Sprintf(`(searchText) => {
+		const t = searchText.toLowerCase();
+		const words = t.split(' ').filter(w => w.length > 2);
+		
+		// Стратегия 1: точное совпадение
+		// Стратегия 2: начинается с текста
+		// Стратегия 3: содержит все слова
+		const strategies = [
+			el => (el.innerText||'').trim().toLowerCase() === t,
+			el => (el.innerText||'').trim().toLowerCase().startsWith(t),
+			el => words.every(w => (el.innerText||'').toLowerCase().includes(w)),
+			el => (el.getAttribute('aria-label')||'').toLowerCase().includes(t),
+		];
+		
+		const selectors = ['a','button','[role="button"]','div','span','li'];
+		
+		for (const strategy of strategies) {
+			for (const sel of selectors) {
+				for (const el of document.querySelectorAll(sel)) {
+					const rect = el.getBoundingClientRect();
+					if (rect.width === 0 || rect.height === 0) continue;
+					if (rect.top < 0 || rect.top > window.innerHeight) continue;
+					
+					if (strategy(el)) {
+						el.scrollIntoView({block: 'center'});
+						el.click();
+						return {ok: true, text: (el.innerText||'').substring(0,50)};
+					}
+				}
+			}
+		}
+		return {ok: false};
+	}`)
+
+	result, err := page.Eval(js, text)
+	if err != nil || result == nil || !result.Value.Get("ok").Bool() {
+		return fmt.Errorf("js click failed")
+	}
+	
+	logger.Info(ctx, "🎯 JS smart click", zap.String("found", result.Value.Get("text").String()))
 	return nil
 }
 
-func findByText(page *rod.Page, text string, timeout time.Duration) (*rod.Element, error) {
-	js := fmt.Sprintf(`()=>{const t="%s";for(const s of['button','a','div','span','li']){for(const e of document.querySelectorAll(s)){const x=(e.innerText||'').trim();if(x===t||x.includes(t))return e}}return null}`,
-		strings.ReplaceAll(text, `"`, `\"`))
-	r, err := page.Timeout(timeout).Eval(js)
-	if err != nil || r.Value.Nil() {
-		return nil, fmt.Errorf("not found")
+// jsClickCSS - JS клик по CSS селектору
+func jsClickCSS(page *rod.Page, selector string) error {
+	js := `(sel) => {
+		const el = document.querySelector(sel);
+		if (!el) return {ok: false};
+		el.scrollIntoView({block: 'center'});
+		el.click();
+		return {ok: true};
+	}`
+	result, _ := page.Eval(js, selector)
+	if result == nil || !result.Value.Get("ok").Bool() {
+		return fmt.Errorf("js css click failed")
 	}
-	id := r.Value.Get("objectId").String()
-	if id == "" {
-		return nil, fmt.Errorf("no id")
+	return nil
+}
+
+// getShortText возвращает первые 2-3 слова
+func getShortText(text string) string {
+	words := strings.Fields(text)
+	if len(words) <= 2 {
+		return text
 	}
-	return page.ElementFromObject(&proto.RuntimeRemoteObject{ObjectID: proto.RuntimeRemoteObjectID(id)})
+	return strings.Join(words[:2], " ")
 }
