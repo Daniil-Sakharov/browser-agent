@@ -129,11 +129,12 @@ func (a *App) Run() error {
 		ag.SetProgressCallback(func(event agent.ProgressEvent) {
 			switch event.Type {
 			case "step":
-				colorInfo.Printf("\n📍 Шаг %d\n", event.Step) // Убрали MaxSteps - нет лимита
+				fmt.Println() // Пустая строка для разделения
+				colorInfo.Printf("━━━ Шаг %d ━━━\n", event.Step)
 			case "waiting":
-				colorInfo.Println("   🤔 Думаю...")
+				colorAssistant.Println("🤖 Agent: анализирую ситуацию...")
 			case "thinking":
-				colorAssistant.Println("\n🧠 Думаю:")
+				colorAssistant.Println("🤖 Agent:")
 				lines := strings.Split(event.Reasoning, "\n")
 				for _, line := range lines {
 					if line != "" {
@@ -141,52 +142,50 @@ func (a *App) Run() error {
 					}
 				}
 				if event.Tool != "" {
-					colorTool.Printf("   → Решение: %s\n", event.Tool)
+					colorTool.Printf("   ➜ %s\n", event.Tool)
 				}
 			case "tool":
-				colorTool.Printf("\n🔧 Использую инструмент: %s\n", event.Tool)
-				for key, value := range event.Params {
-					// Обрезаем длинные значения
-					if len(value) > 60 {
-						value = value[:60] + "..."
+				colorTool.Printf("🔧 %s", event.Tool)
+				if len(event.Params) > 0 {
+					for key, value := range event.Params {
+						if len(value) > 50 {
+							value = value[:50] + "..."
+						}
+						colorInfo.Printf(" %s=%s", key, value)
 					}
-					colorInfo.Printf("   %s: %s\n", key, value)
 				}
+				fmt.Println()
 			case "result":
 				if event.Success {
-					colorSuccess.Printf("   ✅ %s\n", truncateResult(event.Result))
+					colorSuccess.Printf("   ✓ %s\n", truncateResult(event.Result))
 				} else {
-					colorError.Printf("   ❌ %s\n", truncateResult(event.Result))
+					colorError.Printf("   ✗ %s\n", truncateResult(event.Result))
 				}
 			case "subagent":
 				colorSubAgent := color.New(color.FgMagenta)
-				// Краткий вывод результата поиска элементов
-				result := event.Result
-				if len(result) > 100 {
-					result = result[:100] + "..."
-				}
-				colorSubAgent.Printf("   🔍 %s\n", result)
+				colorSubAgent.Printf("   🔎 SubAgent: поиск элементов...\n")
 			case "subagent_thinking":
 				colorSubAgent := color.New(color.FgMagenta)
-				colorSubAgent.Printf("   🧠 Анализирую: %s\n", truncateResult(event.Result))
+				colorSubAgent.Printf("   🔎 SubAgent: %s\n", truncateResult(event.Result))
 			case "subagent_result":
 				colorSubAgent := color.New(color.FgMagenta)
 				if event.Success && event.Result != "" {
-					// Выводим только первые 3 строки анализа
+					// Считаем элементы
 					lines := strings.Split(event.Result, "\n")
-					count := 0
+					elemCount := 0
 					for _, line := range lines {
-						if line != "" && count < 3 {
-							colorSubAgent.Printf("   💡 %s\n", line)
-							count++
+						if strings.Contains(line, "text:") {
+							elemCount++
 						}
 					}
-					if len(lines) > 3 {
-						colorSubAgent.Printf("   ...\n")
+					if elemCount > 0 {
+						colorSubAgent.Printf("   ✓ SubAgent: найдено %d элементов\n", elemCount)
+					} else {
+						colorSubAgent.Printf("   ✓ SubAgent: анализ завершён\n")
 					}
 				}
 			case "error":
-				colorError.Printf("   ❌ Ошибка: %s\n", event.Result)
+				colorError.Printf("   ✗ Ошибка: %s\n", event.Result)
 			}
 		})
 

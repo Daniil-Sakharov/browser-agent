@@ -3,11 +3,28 @@ package agent
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
 )
+
+// isNegativeResult проверяет что результат негативный
+func isNegativeResult(result string) bool {
+	lower := strings.ToLower(result)
+	negativeWords := []string{
+		"не смог", "не удалось", "извините", "частично",
+		"к сожалению", "невозможно", "не получилось", "провал",
+		"не выполнен", "не завершен", "ошибка",
+	}
+	for _, word := range negativeWords {
+		if strings.Contains(lower, word) {
+			return true
+		}
+	}
+	return false
+}
 
 func (a *Agent) executeStep(ctx context.Context) (bool, error) {
 	a.emitProgress(ProgressEvent{Type: "step", Step: a.stepCount, MaxSteps: a.maxSteps})
@@ -28,6 +45,13 @@ func (a *Agent) executeStep(ctx context.Context) (bool, error) {
 	}
 
 	if d.Complete {
+		// Проверяем что результат не негативный
+		if isNegativeResult(d.Result) && a.stepCount < 20 {
+			// Отклоняем негативный complete_task и заставляем продолжить
+			logger.Warn(ctx, "⚠️ Rejecting negative complete_task", zap.String("result", d.Result))
+			a.ai.AddToolResult(d.ToolUseID, "ОТКЛОНЕНО! Нельзя завершать с негативным результатом. Продолжай работу - попробуй другие способы!", true)
+			return false, nil
+		}
 		a.currentTask.Result = d.Result
 		a.emitProgress(ProgressEvent{Type: "result", Result: d.Result, Success: true})
 		return true, nil
