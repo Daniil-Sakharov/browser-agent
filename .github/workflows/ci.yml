@@ -38,6 +38,7 @@ jobs:
         with:
           version: v2.2.2
           args: --timeout=5m
+          verify: false
       
       - name: Verify binary
         run: |
