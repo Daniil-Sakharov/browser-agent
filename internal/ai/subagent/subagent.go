@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm"
-	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm/claude"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -18,14 +17,8 @@ type DOMSubAgent struct {
 	maxTokens int
 }
 
-// New создаёт нового Sub-Agent
-func New(apiKey, baseURL, model string, maxTokens int) *DOMSubAgent {
-	provider, _ := claude.New(claude.Config{APIKey: apiKey, BaseURL: baseURL})
-	return &DOMSubAgent{provider: provider, model: model, maxTokens: maxTokens}
-}
-
-// NewWithProvider создаёт Sub-Agent с кастомным LLM провайдером
-func NewWithProvider(provider llm.Provider, model string, maxTokens int) *DOMSubAgent {
+// New создаёт Sub-Agent с LLM провайдером
+func New(provider llm.Provider, model string, maxTokens int) *DOMSubAgent {
 	return &DOMSubAgent{provider: provider, model: model, maxTokens: maxTokens}
 }
 

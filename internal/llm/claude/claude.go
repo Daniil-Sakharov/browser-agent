@@ -16,21 +16,15 @@ type Provider struct {
 	client *anthropic.Client
 }
 
-// Config конфигурация Claude
-type Config struct {
-	APIKey  string
-	BaseURL string
-}
-
 // New создаёт нового Claude провайдера
-func New(cfg Config) (*Provider, error) {
-	if cfg.APIKey == "" {
+func New(apiKey, baseURL string) (*Provider, error) {
+	if apiKey == "" {
 		return nil, fmt.Errorf("API key is required")
 	}
 
-	opts := []option.RequestOption{option.WithAPIKey(cfg.APIKey)}
-	if cfg.BaseURL != "" {
-		opts = append(opts, option.WithBaseURL(cfg.BaseURL))
+	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
 	}
 
 	client := anthropic.NewClient(opts...)

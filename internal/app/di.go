@@ -77,10 +77,7 @@ func (d *DIContainer) SecurityChecker(ctx context.Context) *security.Checker {
 func (d *DIContainer) LLMProvider(ctx context.Context) llm.Provider {
 	if d.llmProvider == nil {
 		cfg := config.AppConfig().Anthropic
-		provider, err := claude.New(claude.Config{
-			APIKey:  cfg.APIKey(),
-			BaseURL: cfg.BaseURL(),
-		})
+		provider, err := claude.New(cfg.APIKey(), cfg.BaseURL())
 		if err != nil {
 			panic(fmt.Sprintf("llm: %s", err))
 		}
@@ -93,7 +90,7 @@ func (d *DIContainer) LLMProvider(ctx context.Context) llm.Provider {
 func (d *DIContainer) DOMSubAgent(ctx context.Context) *subagent.DOMSubAgent {
 	if d.domSubAgent == nil {
 		cfg := config.AppConfig().Anthropic
-		d.domSubAgent = subagent.NewWithProvider(d.LLMProvider(ctx), cfg.Model(), 2048)
+		d.domSubAgent = subagent.New(d.LLMProvider(ctx), cfg.Model(), 2048)
 	}
 	return d.domSubAgent
 }
