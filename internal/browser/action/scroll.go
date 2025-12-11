@@ -25,6 +25,8 @@ func Scroll(ctx context.Context, p PageProvider, direction string, amount int) e
 		return fmt.Errorf("scroll failed: %w", err)
 	}
 
-	page.Timeout(3 * time.Second).WaitStable(300 * time.Millisecond)
+	// Короткая пауза вместо WaitStable (не блокирует на динамических страницах)
+	time.Sleep(300 * time.Millisecond)
+	logger.Info(ctx, "✅ Scroll completed")
 	return nil
 }

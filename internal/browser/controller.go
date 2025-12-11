@@ -148,9 +148,9 @@ func formatElements(elements []gson.JSON) string {
 		if css := obj["cssSelector"].String(); css != "" && css != sel {
 			out.WriteString(fmt.Sprintf(" [%s]", css))
 		}
-		out.WriteString(fmt.Sprintf(" [%d,%d]\n", obj["x"].Int(), obj["y"].Int()))
+		out.WriteString("\n")
 	}
-	out.WriteString("\n💡 text:ТекстКнопки для клика")
+	out.WriteString("\n💡 Используй text:ТекстКнопки для клика")
 	return out.String()
 }
 
