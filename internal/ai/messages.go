@@ -7,6 +7,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"go.uber.org/zap"
 
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/ai/tools"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/logger"
 )
@@ -15,10 +16,8 @@ import (
 func (c *Client) DecideNextAction(ctx context.Context) (*domain.Decision, error) {
 	logger.Info(ctx, "🤔 Asking Claude for next action")
 
-	// Системный промпт
 	systemPrompt := c.buildSystemPrompt()
 
-	// Отправляем запрос в Claude
 	response, err := c.anthropic.Messages.New(ctx, anthropic.MessageNewParams{
 		Model:     anthropic.Model(c.model),
 		MaxTokens: int64(c.maxTokens),
@@ -26,7 +25,7 @@ func (c *Client) DecideNextAction(ctx context.Context) (*domain.Decision, error)
 			{Text: systemPrompt},
 		},
 		Messages: c.conversation.GetMessages(),
-		Tools:    BrowserTools(),
+		Tools:    tools.BrowserTools(),
 	})
 
 	if err != nil {
