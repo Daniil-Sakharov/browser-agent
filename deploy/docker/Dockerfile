@@ -5,7 +5,7 @@
 # =====================================================
 
 # ========== STAGE 1: Builder ==========
-FROM golang:1.24-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 # Установка необходимых зависимостей для сборки
 RUN apk add --no-cache \
@@ -72,9 +72,6 @@ WORKDIR /app
 
 # Копируем скомпилированный бинарник из builder stage
 COPY --from=builder /build/agent /app/agent
-
-# Копируем конфигурационные файлы
-COPY --from=builder /build/.env.example /app/.env.example
 
 # Создаём необходимые директории с правильными правами
 RUN mkdir -p \

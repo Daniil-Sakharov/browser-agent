@@ -4,8 +4,6 @@
 # Production-ready конфигурация для запуска агента
 # =====================================================
 
-version: '3.8'
-
 services:
   agent:
     # Имя образа
@@ -24,12 +22,11 @@ services:
     # Restart policy
     restart: unless-stopped
     
-    # Environment variables из .env файла
-    env_file:
-      - ../../.env
-    
-    # Переопределение переменных для Docker окружения
+    # Environment variables
     environment:
+      # API Key (обязательно передать при запуске!)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
       # Browser Configuration (обязательно headless для Docker)
       - BROWSER_HEADLESS=true
       - BROWSER_USER_DATA_DIR=/app/.browser-data
@@ -63,9 +60,6 @@ services:
       
       # Screenshots
       - screenshots:/app/screenshots
-      
-      # Опционально: монтируем .env из хоста (если хочешь редактировать без rebuild)
-      # - ../../.env:/app/.env:ro
     
     # Security options
     security_opt:
@@ -116,25 +110,13 @@ services:
 # =====================================================
 volumes:
   browser-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../../.browser-data
+    name: ai-agent-browser-data
   
   logs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../../logs
+    name: ai-agent-logs
   
   screenshots:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ../../screenshots
+    name: ai-agent-screenshots
 
 # =====================================================
 # Networks
