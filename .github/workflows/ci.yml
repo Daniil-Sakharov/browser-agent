@@ -1,228 +1,50 @@
 name: CI
 
-# Триггеры запуска workflow
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
 
-# Разрешения для GitHub Actions
-permissions:
-  contents: read
-  pull-requests: read
-
-# Переменные окружения для всех jobs
 env:
-  GO_VERSION: '1.21'
-  GOLANGCI_LINT_VERSION: 'v2.1.5'
-  GCI_VERSION: 'v0.13.6'
-  GOFUMPT_VERSION: 'v0.8.0'
+  GO_VERSION: '1.24'
 
 jobs:
-  # ===========================================================================
-  # Линтинг и форматирование
-  # ===========================================================================
-  lint:
-    name: Lint & Format Check
-    runs-on: ubuntu-latest
-    
-    steps:
-      # 1. Checkout кода
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Нужно для некоторых линтеров
-      
-      # 2. Установка Go
-      - name: 🔧 Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-      
-      # 3. Кэширование зависимостей
-      - name: 📦 Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      
-      # 4. Скачивание зависимостей
-      - name: 📥 Download dependencies
-        run: go mod download
-      
-      # 5. Установка инструментов форматирования
-      - name: 🔧 Install formatters
-        run: |
-          mkdir -p ./bin
-          GOBIN=$(pwd)/bin go install mvdan.cc/gofumpt@${{ env.GOFUMPT_VERSION }}
-          GOBIN=$(pwd)/bin go install github.com/daixiang0/gci@${{ env.GCI_VERSION }}
-      
-      # 6. Проверка форматирования через gofumpt
-      - name: 🧼 Check gofumpt formatting
-        run: |
-          echo "Проверяем форматирование через gofumpt..."
-          
-          # Находим все Go файлы (исключая vendor, bin, mocks)
-          FILES=$(find . -type f -name '*.go' \
-            ! -path './vendor/*' \
-            ! -path '*/mocks/*' \
-            ! -path './bin/*')
-          
-          if [ -z "$FILES" ]; then
-            echo "✅ Нет Go файлов для проверки"
-            exit 0
-          fi
-          
-          # Проверяем форматирование (без изменения файлов)
-          UNFORMATTED=$(./bin/gofumpt -l -extra $FILES)
-          
-          if [ -n "$UNFORMATTED" ]; then
-            echo "❌ Следующие файлы не отформатированы:"
-            echo "$UNFORMATTED"
-            echo ""
-            echo "Запустите локально: task format"
-            exit 1
-          fi
-          
-          echo "✅ Все файлы отформатированы правильно"
-      
-      # 7. Проверка сортировки импортов через gci
-      - name: 🎯 Check gci imports sorting
-        run: |
-          echo "Проверяем сортировку импортов через gci..."
-          
-          # Находим все Go файлы
-          FILES=$(find . -type f -name '*.go' \
-            ! -path './vendor/*' \
-            ! -path '*/mocks/*' \
-            ! -path './bin/*')
-          
-          if [ -z "$FILES" ]; then
-            echo "✅ Нет Go файлов для проверки"
-            exit 0
-          fi
-          
-          # Получаем название модуля из go.mod
-          MODULE_NAME=$(go list -m)
-          
-          # Проверяем импорты (diff mode)
-          for file in $FILES; do
-            DIFF=$(./bin/gci diff -s standard -s default -s "prefix($MODULE_NAME)" "$file")
-            if [ -n "$DIFF" ]; then
-              echo "❌ Импорты не отсортированы в файле: $file"
-              echo "$DIFF"
-              echo ""
-              echo "Запустите локально: task format"
-              exit 1
-            fi
-          done
-          
-          echo "✅ Все импорты отсортированы правильно"
-      
-      # 8. Установка golangci-lint
-      - name: 🔧 Install golangci-lint
-        run: |
-          mkdir -p ./bin
-          GOBIN=$(pwd)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${{ env.GOLANGCI_LINT_VERSION }}
-      
-      # 9. Запуск golangci-lint
-      - name: 🔍 Run golangci-lint
-        run: |
-          echo "Запускаем golangci-lint..."
-          ./bin/golangci-lint run ./... --config=.golangci.yml --timeout=5m
-          echo "✅ Линтинг завершен успешно"
-      
-      # 10. Финальное сообщение
-      - name: ✅ All checks passed
-        if: success()
-        run: |
-          echo "╔═══════════════════════════════════════╗"
-          echo "║  ✅ Все проверки прошли успешно!     ║"
-          echo "╚═══════════════════════════════════════╝"
-  
-  # ===========================================================================
-  # Сборка проекта
-  # ===========================================================================
   build:
-    name: Build
+    name: Build & Lint
     runs-on: ubuntu-latest
-    needs: lint  # Запускается только после успешного линтинга
     
     steps:
-      # 1. Checkout кода
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
       
-      # 2. Установка Go
-      - name: 🔧 Set up Go
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       
-      # 3. Кэширование зависимостей
-      - name: 📦 Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      
-      # 4. Скачивание зависимостей
-      - name: 📥 Download dependencies
+      - name: Download dependencies
         run: go mod download
       
-      # 5. Сборка проекта
-      - name: 🔨 Build project
+      - name: Build
         run: |
-          echo "Собираем проект..."
           mkdir -p ./bin
           go build -v -o ./bin/agent ./cmd/agent
-          echo "✅ Сборка завершена успешно"
+          echo "Build successful"
       
-      # 6. Проверка бинарника
-      - name: ✅ Verify binary
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+      
+      - name: Verify binary
         run: |
           if [ -f ./bin/agent ]; then
-            echo "✅ Бинарник создан успешно"
+            echo "Binary created successfully"
             ls -lh ./bin/agent
           else
-            echo "❌ Бинарник не найден"
+            echo "Binary not found"
             exit 1
           fi
-  
-  # ===========================================================================
-  # Итоговый статус (опционально)
-  # ===========================================================================
-  status:
-    name: CI Status
-    runs-on: ubuntu-latest
-    needs: [lint, build]
-    if: always()
-    
-    steps:
-      - name: 📊 Check status
-        run: |
-          if [ "${{ needs.lint.result }}" != "success" ] || [ "${{ needs.build.result }}" != "success" ]; then
-            echo "❌ CI failed"
-            exit 1
-          fi
-          
-          echo "╔═══════════════════════════════════════════════╗"
-          echo "║  🎉 CI прошел успешно!                       ║"
-          echo "║  ✅ Lint: ${{ needs.lint.result }}"
-          echo "║  ✅ Build: ${{ needs.build.result }}"
-          echo "╚═══════════════════════════════════════════════╝"
