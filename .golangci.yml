@@ -1,222 +1,28 @@
-# Конфигурация golangci-lint для AI Browser Agent
-# Документация: https://golangci-lint.run/usage/configuration/
-
 version: "2"
 
 run:
-  # Таймаут для анализа
   timeout: 5m
-  
-  # Директории для пропуска
-  skip-dirs:
-    - vendor
-    - bin
-    - .git
-  
-  # Файлы для пропуска
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*_gen\\.go$"
-  
-  # Количество процессов для анализа
-  concurrency: 4
-  
-  # Модули для анализа
   modules-download-mode: readonly
 
-# Настройки вывода
 output:
-  # Формат вывода
   formats:
     colored-line-number:
       path: stdout
-  
-  # Показывать ли проверки в выводе
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: false
   sort-results: true
 
-# Настройки линтеров
-linters-settings:
-  # govet: настройка встроенного анализатора Go
-  govet:
-    enable-all: true
-    disable:
-      - shadow  # Часто false-positives
-  
-  # gocyclo: проверка цикломатической сложности
-  gocyclo:
-    min-complexity: 15
-  
-  # goconst: проверка повторяющихся строк
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-    ignore-tests: true
-  
-  # misspell: проверка орфографии
-  misspell:
-    locale: US
-    ignore-words:
-      - cancelled
-  
-  # lll: проверка длины строк
-  lll:
-    line-length: 120
-    tab-width: 4
-  
-  # goimports: управление импортами
-  goimports:
-    local-prefixes: github.com/Daniil-Sakharov/BrowserAgent
-  
-  # gofumpt: строгий форматтер
-  gofumpt:
-    extra-rules: true
-  
-  # gocritic: мета-линтер с множеством проверок
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-      - experimental
-    disabled-checks:
-      - dupImport
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - commentedOutCode
-  
-  # revive: быстрый линтер с гибкими правилами
-  revive:
-    rules:
-      - name: var-naming
-        severity: warning
-        disabled: false
-        arguments:
-          - ["ID", "URL", "API", "AI", "HTTP", "JSON", "XML", "HTML"]
-      - name: exported
-        severity: warning
-        disabled: false
-  
-  # errcheck: проверка необработанных ошибок
-  errcheck:
-    check-type-assertions: false
-    check-blank: false
-    exclude-functions:
-      - (*bytes.Buffer).Write
-      - (*bytes.Buffer).WriteByte
-      - (*bytes.Buffer).WriteString
-      - (github.com/fatih/color.Color).Print
-      - (github.com/fatih/color.Color).Printf
-      - (github.com/fatih/color.Color).Println
-      - (*github.com/go-rod/rod.Page).WaitLoad
-      - (*github.com/go-rod/rod.Page).WaitStable
-      - (*github.com/go-rod/rod.Element).Hover
-      - (*github.com/go-rod/rod.Element).ScrollIntoView
-      - (*github.com/go-rod/rod.Page).Close
-      - os.MkdirAll
-      - json.Unmarshal
-  
-  # gosec: проверка безопасности
-  gosec:
-    severity: medium
-    confidence: medium
-    excludes:
-      - G104  # Необработанные ошибки
-      - G301  # Directory permissions
-      - G302  # File permissions
-      - G304  # File inclusion
-      - G306  # WriteFile permissions
-  
-  # unused: проверка неиспользуемого кода
-  unused:
-    check-exported: false
-  
-  # staticcheck: статический анализатор
-  staticcheck:
-    checks: ["all"]
-  
-  # stylecheck: проверка стиля кода
-  stylecheck:
-    checks: ["all", "-ST1000", "-ST1003", "-ST1016"]
-    dot-import-whitelist:
-      - github.com/stretchr/testify/assert
-  
-  # unparam: поиск неиспользуемых параметров функций
-  unparam:
-    check-exported: false
-
-# Включенные линтеры
 linters:
   disable-all: true
   disable:
     - errcheck
   enable:
-    # Встроенные
     - govet
     - staticcheck
     - unused
     - ineffassign
-    
-    # Стиль
     - misspell
-    
-    # Сложность и качество
-    - nestif
-    
-    # Производительность
-    - prealloc
-    - bodyclose
 
-# Форматтеры (v2)
-formatters:
-  enable:
-    - gofmt
-    - gofumpt
-    - goimports
-
-# Настройки issues
 issues:
-  # Максимальное количество сообщений за один запуск (0 = нет лимита)
   max-issues-per-linter: 0
   max-same-issues: 0
-  
-  # Показывать новые issues с момента последнего коммита
-  new: false
-  
-  # Исключения для конкретных линтеров
-  exclude-rules:
-    # Исключения для тестов
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-        - funlen
-        - gocognit
-    
-    # Исключения для main.go
-    - path: cmd/
-      linters:
-        - gochecknoinits
-    
-    # Исключения для generated кода
-    - path: ".*\\.pb\\.go"
-      linters:
-        - all
-    
-    # Игнорировать длинные строки с go:generate
-    - linters:
-        - lll
-      source: "^//go:generate "
-    
-    # Игнорировать TODO/FIXME комментарии
-    - linters:
-        - godox
-      text: "TODO|FIXME"
-  
-  # Не пропускать known issues
-  exclude-use-default: false
