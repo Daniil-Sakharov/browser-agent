@@ -10,6 +10,8 @@ import (
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/browser"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/config"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/domain"
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm"
+	"github.com/Daniil-Sakharov/BrowserAgent/internal/llm/claude"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security"
 	"github.com/Daniil-Sakharov/BrowserAgent/internal/security/confirm"
 	"github.com/Daniil-Sakharov/BrowserAgent/pkg/closer"
@@ -20,6 +22,7 @@ type DIContainer struct {
 	browserController *browser.Controller
 	aiClient          *ai.Client
 	securityChecker   *security.Checker
+	llmProvider       llm.Provider
 	domSubAgent       *subagent.DOMSubAgent
 	agent             *agent.Agent
 }
@@ -70,11 +73,27 @@ func (d *DIContainer) SecurityChecker(ctx context.Context) *security.Checker {
 	return d.securityChecker
 }
 
+// LLMProvider возвращает LLM провайдер
+func (d *DIContainer) LLMProvider(ctx context.Context) llm.Provider {
+	if d.llmProvider == nil {
+		cfg := config.AppConfig().Anthropic
+		provider, err := claude.New(claude.Config{
+			APIKey:  cfg.APIKey(),
+			BaseURL: cfg.BaseURL(),
+		})
+		if err != nil {
+			panic(fmt.Sprintf("llm: %s", err))
+		}
+		d.llmProvider = provider
+	}
+	return d.llmProvider
+}
+
 // DOMSubAgent возвращает DOM Sub-Agent
 func (d *DIContainer) DOMSubAgent(ctx context.Context) *subagent.DOMSubAgent {
 	if d.domSubAgent == nil {
 		cfg := config.AppConfig().Anthropic
-		d.domSubAgent = subagent.New(cfg.APIKey(), cfg.BaseURL(), cfg.Model(), 2048)
+		d.domSubAgent = subagent.NewWithProvider(d.LLMProvider(ctx), cfg.Model(), 2048)
 	}
 	return d.domSubAgent
 }
