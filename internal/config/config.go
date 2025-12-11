@@ -20,45 +20,22 @@ type Config struct {
 
 // Load загружает конфигурацию из .env файла и переменных окружения
 func Load(path ...string) error {
-	// Загружаем .env файл (если существует)
-	err := godotenv.Load(path...)
-	if err != nil && !os.IsNotExist(err) {
+	if err := godotenv.Load(path...); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
-	loggerCfg, err := env.NewLoggerConfig()
-	if err != nil {
-		return err
-	}
-
-	browserCfg, err := env.NewBrowserConfig()
-	if err != nil {
-		return err
-	}
-
-	anthropicCfg, err := env.NewAnthropicConfig()
-	if err != nil {
-		return err
-	}
-
-	agentCfg, err := env.NewAgentConfig()
-	if err != nil {
-		return err
-	}
-
-	securityCfg, err := env.NewSecurityConfig()
+	anthropicCfg, err := env.LoadAnthropicConfig()
 	if err != nil {
 		return err
 	}
 
 	appConfig = &Config{
-		Logger:    loggerCfg,
-		Browser:   browserCfg,
+		Logger:    env.LoadLoggerConfig(),
+		Browser:   env.LoadBrowserConfig(),
 		Anthropic: anthropicCfg,
-		Agent:     agentCfg,
-		Security:  securityCfg,
+		Agent:     env.LoadAgentConfig(),
+		Security:  env.LoadSecurityConfig(),
 	}
-
 	return nil
 }
 
